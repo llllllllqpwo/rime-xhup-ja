@@ -1,0 +1,7 @@
+# default.custom.yaml —— 对全局默认设置的增量补丁（放在 Rime 用户目录即可生效）
+patch:
+  # 方案选单：只保留混输方案 xhup_ja
+  schema_list:
+    - schema: xhup_ja
+  # 左 Shift 键：上屏当前编码（不清除输入、不切中英）
+  ascii_composer/switch_key/Shift_L: commit_code

@@ -1,0 +1,53 @@
+# ja_romaji.schema.yaml —— 日语「棱镜」依赖方案（不进入方案选单）
+# ------------------------------------------------------------------
+# 角色：这是 xhup_ja 的 dependencies 方案，用户不必直接选它。
+#   部署时，librime 按本方案自己的 speller/algebra，把 ja_romaji 词库
+#   编译成 ja_romaji.prism.bin 与 ja_romaji.table.bin。
+#   xhup_ja 的日语翻译器(japanese)引用 prism 名 ja_romaji，
+#   所以日语侧始终按「罗马字」查表，不会被中文侧的小鹤双拼规则改写。
+#
+# speller/algebra：只做「音节级」罗马字容错派生（Hepburn 常见异写）。
+#   派生只增不减——原写法照常可用，例如 し 既可打 shi 也可打 si。
+#   改动本文件后需「重新部署」才会重建 prism。
+
+schema:
+  schema_id: ja_romaji
+  name: 日语罗马字·棱镜
+  version: "1.0"
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  algebra:
+    # ん：n / nn（本方案不生成 m 变体）
+    - derive/^n$/nn/
+    # し ち つ ふ じ：Hepburn 与训令式等异写并存
+    - derive/^shi$/si/
+    - derive/^chi$/ti/
+    - derive/^tsu$/tu/
+    - derive/^fu$/hu/
+    - derive/^ji$/zi/
+    # しゃ しゅ しょ
+    - derive/^sha$/sya/
+    - derive/^shu$/syu/
+    - derive/^sho$/syo/
+    # ちゃ ちゅ ちょ
+    - derive/^cha$/tya/
+    - derive/^chu$/tyu/
+    - derive/^cho$/tyo/
+    # じゃ じゅ じょ：ja / jya / zya 三种写法
+    - derive/^ja$/jya/
+    - derive/^ja$/zya/
+    - derive/^ju$/jyu/
+    - derive/^ju$/zyu/
+    - derive/^jo$/jyo/
+    - derive/^jo$/zyo/
+    # 小假名：l 前缀也可写作 x 前缀（xtu=っ、xa=ぁ）
+    - derive/^l/x/
+
+translator:
+  dictionary: ja_romaji
+  prism: ja_romaji
+  enable_sentence: true      # 未收录词可按音节自动组句
+  enable_user_dict: false    # 本方案作为依赖被构建时不写用户词典；
+                             # 实际生效的日语翻译器在 xhup_ja.schema.yaml 的 japanese 段
+                             # （enable_user_dict: true，写 ja_romaji.userdb）。

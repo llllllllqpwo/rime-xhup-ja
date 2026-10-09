@@ -1,0 +1,31 @@
+# weasel.custom.yaml —— 小狼毫外观设置
+# customization 段由「输入法设定」界面写入（记录生成信息），一般不用手改；
+# 真正生效的是 patch 段：预置配色方案 preset_color_schemes 与界面样式 style。
+customization:
+  distribution_code_name: Weasel
+  distribution_version: 0.17.0
+  generator: "Weasel::UIStyleSettings"
+  modified_time: "Tue Oct  6 17:01:47 2026"
+  rime_version: 1.13.1
+patch:
+  # 预置配色方案（薄荷绿 bohelv / 柑橘黄 citrus，各含亮色与暗色 *_dark）
+  preset_color_schemes:
+    bohelv: {author: rxhaol, back_color: 0xFFFFFF, border_color: 0xFFFFFF, candidate_text_color: 0x454545, color_format: abgr, color_space: srgb, hilited_candidate_back_color: 0x264C7F20, hilited_candidate_text_color: 0x4C7F20, hilited_label_color: 0x4C7F20, hilited_mark_color: 0x4C7F20, label_color: 0x8E8E8E, name: "薄荷绿", shadow_color: 0x40000000, text_color: 0x4C7F20, translucency: true}
+    bohelv_dark: {back_color: 0x000000, border_color: 0x000000, candidate_text_color: 0xBABABA, color_format: abgr, color_space: srgb, hilited_candidate_back_color: 0xCB4C7F20, hilited_candidate_text_color: 0xFFFFFF, hilited_label_color: 0xFFFFFF, hilited_mark_color: 0xFFFFFF, label_color: 0x717171, name: "薄荷绿·暗", shadow_color: 0x40000000, text_color: 0xFFFFFF, translucency: true}
+    citrus: {author: rxhaol, back_color: 0xFFFFFF, border_color: 0xFFFFFF, candidate_text_color: 0x333333, color_format: abgr, color_space: srgb, hilited_candidate_back_color: 0xE63FB797, hilited_candidate_text_color: 0xFFFFFF, hilited_label_color: 0x3FB797, hilited_mark_color: 0x3FB797, label_color: 0x8E8E8E, name: "柑橘黄 (Citrus)", shadow_color: 0x40000000, text_color: 0x3FB797, translucency: true}
+    citrus_dark: {back_color: 0x1A1A1A, border_color: 0x1A1A1A, candidate_text_color: 0xAAAAAA, color_format: abgr, color_space: srgb, hilited_candidate_back_color: 0xCC3FB797, hilited_candidate_text_color: 0xFFFFFF, hilited_label_color: 0xCCCCCC, hilited_mark_color: 0x3FB797, label_color: 0x717171, name: "柑橘黄·暗 (Citrus Dark)", shadow_color: 0x40000000, text_color: 0xCCCCCC, translucency: true}
+  # 界面样式：候选竖排、字体、间距、圆角等
+  style:
+    candidate_list_layout: stacked
+    color_scheme: bohelv
+    color_scheme_dark: bohelv_dark
+    comment_font_face: "Segoe UI, Microsoft YaHei UI"
+    comment_font_point: 13
+    font_face: "Segoe UI, Microsoft YaHei UI, Noto Sans SC, SimSun-ExtB, Segoe UI Symbol, Segoe UI Emoji"
+    font_point: 15
+    inline_candidate: false
+    inline_preedit: true
+    label_font_point: 11
+    label_format: "%s."
+    layout: {border: 4, candidate_spacing: 8, corner_radius: 6, hilite_padding: 4, hilite_padding_x: 8, hilite_spacing: 6, margin_x: 10, margin_y: 3, shadow_offset_x: 1, shadow_offset_y: 1, shadow_radius: 6, spacing: 12}
+    text_orientation: horizontal

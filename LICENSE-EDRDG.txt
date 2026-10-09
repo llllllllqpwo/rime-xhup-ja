@@ -1,0 +1,76 @@
+# 第三方数据来源与许可
+
+本方案的**代码与配置**（`xhup_ja.schema.yaml`、`ja_romaji.schema.yaml`、`lua/`、`tools/`）
+可自由使用。但 `ja_romaji.dict.yaml`、`ja_words_extra.tsv`、`ja_words_local.tsv` 中
+包含下列开源数据的衍生内容，分发时请一并保留本文件与相应署名。
+
+---
+
+## 1. Mozc 开源词库 —— 词条与「读音内优选顺序」
+
+- 来源：<https://github.com/google/mozc>
+- 本项目使用的形态：[rwpersson/mado-ja-dict-data](https://github.com/rwpersson/mado-ja-dict-data)
+  转换的文本版（`mado-ja-dict.txt`）
+- 许可：**BSD-3-Clause（Google）**，词库部分另含 **IPAdic / NAIST** 的 BSD 许可
+- 说明：Mozc 开源版的词库基于 IPAdic，**不含** Google 日语输入法使用的
+  Web 语料大词库。文件按读音排序，同一读音块内的表记顺序即该读音下的
+  转换优先级——本项目用它来给日语候选排序（这是 JMdict 缺的信息）。
+
+## 2. JMdict / jmnedict / kanjidic2 —— 常用词与专有名词
+
+- 来源：© Electronic Dictionary Research and Development Group (EDRDG)
+  <https://www.edrdg.org/>
+- 本项目使用的形态：经 [scriptin/jmdict-simplified](https://github.com/scriptin/jmdict-simplified)
+  转换的 JSON 版本
+  - `jmdict-eng-common`（常用词条子集，约 2.3 万）
+  - `jmnedict-all`（专有名词，约 74 万）
+  - `kanjidic2-en`（汉字音训读）
+- 许可：**Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**
+  <https://creativecommons.org/licenses/by-sa/4.0/>
+- 要求：署名 EDRDG；若再分发衍生词库，需以相同许可（CC BY-SA 4.0）发布。
+
+## 3. FrequencyWords —— 仅用于判断表记是否可信
+
+- 来源：<https://github.com/hermitdave/FrequencyWords>
+- 使用文件：`content/2016/ja/ja_50k.txt`
+- 许可：**MIT License**
+- 说明：本项目**不把词频数值写入权重**，只用「该表记是否出现在高频榜前 3000」
+  作为可信度判据，用于压低生僻同音写法（例：さくら → 桜 与 偽客）。
+
+## 4. OpenCC —— 简繁转换数据
+
+- 来源：<https://github.com/BYVoid/OpenCC>
+- 本项目使用文件：`TSCharacters.txt`、`TSPhrases.txt`（由 `lua/zh_simplify.lua` 读取）
+- 许可：**Apache License 2.0**
+
+## 5. rime-ice —— 小鹤双拼键位、调权思路，以及打包的中文词库
+
+- 来源：<https://github.com/iDvel/rime-ice>
+- 使用方式：
+  - `xhup_ja.schema.yaml` 中的小鹤双拼 algebra 键位定义与权重取舍参考了该项目
+  - **中文词库**：`xhup_ja.schema.yaml` 里 `translator/dictionary: rime_ice`，
+    因此**完整版包内直接附带了** `rime_ice.dict.yaml` 与 `cn_dicts/`（44 MB）
+- 许可：**GPL-3.0**，全文见同目录的 `LICENSE-rime-ice.txt`
+  （上游 <https://github.com/iDvel/rime-ice/blob/main/LICENSE>）
+- 注意：完整版因为附带了 rime-ice 的词库数据，再分发时**必须一并保留
+  `LICENSE-rime-ice.txt`**，并遵守 GPL-3.0。轻量版不含该数据，无此要求。
+
+---
+
+## 手工维护的专名表
+
+`ja_words_local.tsv` 是**人工挑选**的，不属上述任何数据集（作品名、艺人艺名等），
+可随本方案一并分发。格式：`表记 <TAB> 假名读音 [<TAB> 权重]`。
+
+## 重新生成衍生词库
+
+```bash
+# 抓取上游开源数据（需要 Node 18+；受限网络可加 --proxy host:port）
+node tools/fetch_ja_words.mjs            # → ja_words_extra.tsv
+python3 tools/gen_ja_dict.py -o ja_romaji.dict.yaml
+```
+
+`tools/fetch_ja_words.mjs` 抓取的原始数据会缓存在 `_cache/`（约 200 MB，
+其中 jmnedict 的 JSON 就有 155 MB），该目录**不必随方案分发**，
+删除后重新运行脚本即可再次下载。
+只想更新手工专名时，改 `ja_words_local.tsv` 后直接跑 `gen_ja_dict.py` 即可。

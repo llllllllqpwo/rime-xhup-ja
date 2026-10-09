@@ -1,0 +1,209 @@
+# xhup_ja.schema.yaml —— 小鹤双拼·日语混输
+# ======================================================================
+# 中文用小鹤双拼、日语用 Hepburn 罗马字，同一方案内直接混输：
+# 无需切换方案 / 模式，也不需要前缀引导。
+#     nihc     → 你好         vsgo     → 中国        （小鹤双拼）
+#     nihongo  → 日本語       watashi  → 私          （罗马字）
+#
+# 结构：两个翻译器，各自按自己的 prism 解析同一串按键——
+#   · 中文 translator → 词库 rime_ice，prism xhup_ja_zh（小鹤码）
+#   · 日语 japanese   → 词库 ja_romaji，prism ja_romaji（罗马字码，
+#                       由依赖方案 ja_romaji 以纯罗马字 algebra 预构建）
+#   两个翻译器各按自己的 prism 解析同一串按键，候选汇入同一列表按权重竞争。
+#   小鹤把 zh/ch/sh 归并成 v/i/u，故 shi/chi/tsu 这类含 sh/ch 的罗马字串
+#   在小鹤全拼里不是合法音节，基本只由日语侧命中（候选里的 四/史/地 其实是
+#   日语汉字读音，并非中文候选）；而 ka 这类双拼码与罗马字同形的串会两侧竞争。
+#
+# 参考：rime-ice（小鹤 algebra）· swiftol/Rime_Config（prism 复用）
+#       · iamcheyan/rime_sbzrjp（罗马字容错）。
+# ======================================================================
+
+schema:
+  schema_id: xhup_ja
+  name: 小鹤双拼·日语混输
+  version: "1.0"
+  author:
+    - AgentMore 全栈开发
+  description: |
+    中文小鹤双拼 + 日语罗马字 无缝混输。
+    中文: 小鹤双拼(键位同 rime-ice)
+    日语: Hepburn 罗马字(si/ti/tu 等变体亦可)
+  dependencies:
+    - ja_romaji        # 日语 prism 构建方案（须与主方案一起部署）
+
+switches:
+  - name: ascii_mode
+    states: [ 中, Ａ ]          # 中文 / 英文
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: zh_simp
+    states: [ 漢, 汉 ]
+    reset: 1                    # 默认输出简体
+  - name: ascii_punct
+    states: [ 。，, ．， ]       # 全角 / 半角标点
+
+engine:
+  processors:
+    # 假名一次性模式（Shift+h 平假名 / Shift+k 片假名）：必须排在
+    # ascii_composer 之前，抢先吞掉 H/K，否则会被当作大写字母上屏。
+    - lua_processor@*kana_mode
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    # 标点直出：必须排在 punctuator 之前，接管 , . 等常用标点，
+    # 直接上屏全角形式（详见 lua/punct_priority.lua）。
+    - lua_processor@*punct_priority
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    # 日语在中文之前：同等条件下按翻译器顺序决定候选先后。
+    - script_translator@japanese     # 日语·罗马字
+    - script_translator              # 中文·小鹤双拼
+  filters:
+    # 顺序有意义：jp_lang 先按注释里的零宽标记筛分中/日候选，
+    # 再由 zh_simplify 对中文候选做繁→简（日语候选按标记原样放行）。
+    - lua_filter@*jp_lang
+    - lua_filter@*zh_simplify
+    - uniquifier
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: " '"
+  algebra:
+    # ---- 小鹤双拼键位（源自 rime-double-pinyin，与 rime-ice 一致）----
+    - erase/^xx$/
+    - derive/^([jqxy])u$/$1v/
+    - derive/^([aoe])([ioun])$/$1$1$2/
+    - xform/^([aoe])(ng)?$/$1$1$2/
+    - xform/iu$/Ⓠ/
+    - xform/(.)ei$/$1Ⓦ/
+    - xform/uan$/Ⓡ/
+    - xform/[uv]e$/Ⓣ/
+    - xform/un$/Ⓨ/
+    - xform/^sh/Ⓤ/
+    - xform/^ch/Ⓘ/
+    - xform/^zh/Ⓥ/
+    - xform/uo$/Ⓞ/
+    - xform/ie$/Ⓟ/
+    - xform/(.)i?ong$/$1Ⓢ/
+    - xform/ing$|uai$/Ⓚ/
+    - xform/(.)ai$/$1Ⓓ/
+    - xform/(.)en$/$1Ⓕ/
+    - xform/(.)eng$/$1Ⓖ/
+    - xform/[iu]ang$/Ⓛ/
+    - xform/(.)ang$/$1Ⓗ/
+    - xform/ian$/Ⓜ/
+    - xform/(.)an$/$1Ⓙ/
+    - xform/(.)ou$/$1Ⓩ/
+    - xform/[iu]a$/Ⓧ/
+    - xform/iao$/Ⓝ/
+    - xform/(.)ao$/$1Ⓒ/
+    - xform/ui$/Ⓥ/
+    - xform/in$/Ⓑ/
+    - xlit/ⓆⓌⓇⓉⓎⓊⒾⓄⓅⓈⒹⒻⒼⒽⒿⓀⓁⓏⓍⒸⓋⒷⓃⓂ/qwrtyuiopsdfghjklzxcvbnm/
+    # ---- 音节级简拼：每个音节额外生成「取首字母」的短码 ----
+    # 只作用于中文 prism（xhup_ja_zh）；日语 prism 由依赖方案 ja_romaji 单独
+    # 构建、不含 abbrev，所以日语侧没有简拼，本规则不会影响日语候选。
+    # 例：什么(uf+me)→um、我们(wo+mf)→wm 可直接打出。
+    # 短码会与同形的单字全拼竞争而被压过：如 你好 的缩写 nh 正是「囊(nang)」
+    # 的全拼，输入 nh 得到的是「囊」；「你好」需用完整码 nihc。
+    # rime-ice 的小鹤方案默认注释掉此规则（其原注称会导致带手动分隔符的写法异常）；
+    # 若你要恢复那种写法，把下面这行注释掉即可关闭简拼。
+    - abbrev/^(.).+$/$1/
+
+# ---- 中文翻译器 ----
+translator:
+  dictionary: rime_ice        # 本目录自带的中文词库（rime_ice.dict.yaml + cn_dicts/）
+  prism: xhup_ja_zh           # 独立 prism 名，避免与其它方案的 prism 互相覆盖
+  enable_sentence: true       # 允许整句候选
+  enable_completion: false    # 关闭前缀补全，减少生僻字噪音
+  enable_user_dict: true      # 记录选词频率
+  initial_quality: 1.0
+  # preedit 仅用于输入框回显：把双拼码反显成全拼（不影响实际键入）
+  preedit_format:
+    - xform/(^|[ '])aa/$1a/
+    - xform/(^|[ '])ee/$1e/
+    - xform/(^|[ '])oo/$1o/
+    - xform/([bpmfdtnljqx])n/$1iao/
+    - xform/(\w)g/$1eng/
+    - xform/(\w)q/$1iu/
+    - xform/(\w)w/$1ei/
+    - xform/([dtnlgkhjqxyvuirzcs])r/$1uan/
+    - xform/(\w)t/$1ve/
+    - xform/(\w)y/$1un/
+    - xform/([dtnlgkhvuirzcs])o/$1uo/
+    - xform/(\w)p/$1ie/
+    - xform/([jqx])s/$1iong/
+    - xform/(\w)s/$1ong/
+    - xform/(\w)d/$1ai/
+    - xform/(\w)f/$1en/
+    - xform/(\w)h/$1ang/
+    - xform/(\w)j/$1an/
+    - xform/([gkhvuirzcs])k/$1uai/
+    - xform/(\w)k/$1ing/
+    - xform/([jqxnlb])l/$1iang/
+    - xform/(\w)l/$1uang/
+    - xform/(\w)z/$1ou/
+    - xform/([gkhvuirzcs])x/$1ua/
+    - xform/(\w)x/$1ia/
+    - xform/(\w)c/$1ao/
+    - xform/([dtgkhvuirzcs])v/$1ui/
+    - xform/(\w)b/$1in/
+    - xform/(\w)m/$1ian/
+    - xform/([aoe])\1(\w)/$1$2/
+    - "xform/(^|[ '])v/$1zh/"
+    - "xform/(^|[ '])i/$1ch/"
+    - "xform/(^|[ '])u/$1sh/"
+    - xform/([jqxy])v/$1u/
+    - xform/([nl])v/$1ü/
+    - xform/ü/v/
+
+# ---- 日语翻译器 ----
+japanese:
+  dictionary: ja_romaji        # 本目录自带的日语词库
+  prism: ja_romaji             # 由依赖方案 ja_romaji 构建
+  enable_sentence: true        # 未收录词可按音节自动组句（任意假名串可打）
+  enable_user_dict: true       # 记录选词频率
+  initial_quality: 1.0         # 与中文同权，先后由词库权重决定
+                               # （如 か=1000 低于常见汉字，却高于生僻字）
+  spelling_hints: 64           # 注释显示门槛：音节数 ≤ 64 的候选才带注释
+  always_show_comments: true   # 日语候选始终带注释（注释内容为罗马字）
+  comment_format:
+    # 注释输出为 ⟨…⟩：开括号可见，其后紧跟一个 U+200B 零宽空格（肉眼不可见），
+    # 供 lua/jp_lang.lua、lua/zh_simplify.lua 判断「这是日语候选」。
+    # （曾把整段标记替换成零宽字符，结果连可见的开括号也被吞掉，故改为只藏语言标记。）
+    # 若某渲染环境丢弃零宽字符，可把首行改成 - xform/^/⟨JP⟩/ 并同步改上述两个 lua。
+    - xform/^/⟨​/
+    - xform/$/⟩/
+
+# ---- 标点（中日两用）----
+punctuator:
+  import_preset: default
+  # 关闭 librime 1.13 起的「数字分隔符」：否则紧接数字后按 , . : ' 会被
+  # 当作半角数字分隔符塞进输入框。置空后标点改走下面的 half_shape；
+  # 其中常用的 , . / \ 等已由 lua/punct_priority.lua 优先接管。
+  digit_separators: ""
+  half_shape:
+    '.' : { commit: '。' }      # 句号（punct_priority 未接管时生效）
+    ',' : { commit: '，' }      # 逗号
+    '/' : [ '・', '、', '／' ]  # 日文中点 · 顿号
+    '\' : [ '、', '\', '＼' ]  # 顿号入口
+
+key_binder:
+  import_preset: default        # 沿用默认键位绑定
+
+recognizer:
+  import_preset: default        # 沿用默认识别（URL / 邮箱 / 大写串等）
+
+menu:
+  page_size: 6                  # 每页候选数
