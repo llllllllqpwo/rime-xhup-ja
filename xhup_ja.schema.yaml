@@ -70,6 +70,8 @@ engine:
     - script_translator@japanese     # 日语·罗马字
     - script_translator              # 中文·小鹤双拼
   filters:
+    # 首音节必须完整：消掉 rrj→仍然 这类「首音节简写」的撞码读法
+    - lua_filter@*zh_first_full
     # 顺序有意义：jp_lang 先按注释里的零宽标记筛分中/日候选，
     # 再由 zh_simplify 对中文候选做繁→简（日语候选按标记原样放行）。
     - lua_filter@*jp_lang
